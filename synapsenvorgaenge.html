@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Interaktive Schritt-für-Schritt-Animation der cholinergen Synapse (neuromuskuläre Endplatte) – Acetylcholin, Exozytose, Rezeptor, Abbau, Recycling.">
+<title>Die cholinerge Synapse – Schritt für Schritt</title>
+<style>
+  :root{
+    --bg:#0e1420; --card:#171f31; --card2:#1d2740; --text:#e8ecf5; --muted:#9aa6bd;
+    --accent:#ffb347; --line:#2a3552;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55; padding:20px 14px 40px;
+  }
+  .wrap{max-width:1000px;margin:0 auto}
+  header h1{font-size:clamp(1.4rem,3.5vw,2rem);margin:0 0 4px}
+  header p{margin:0 0 16px;color:var(--muted)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  svg{display:block;width:100%;height:auto}
+
+  /* SVG-Elemente */
+  .bg{fill:#0a1220}
+  .pre{fill:#1f3b57;stroke:#5b93c9;stroke-width:3}
+  .post{fill:#3a2a4b;stroke:#a77bc4;stroke-width:3}
+  .glow{fill:url(#apGrad);transform-box:fill-box;transform-origin:50% 0%;transform:scaleY(0);opacity:0;
+        transition:transform 1s ease-out,opacity .8s;pointer-events:none}
+  .vesicle{transition:transform .6s ease-in,opacity .5s}
+  .vesicle circle{fill:rgba(255,179,71,.14);stroke:#ffb347;stroke-width:2}
+  .chan,.rec{transition:transform .5s,fill .5s}
+  .chan{fill:#8a93a8}
+  .chan.open{fill:#4fc3f7}
+  .chan.l.open{transform:translateX(-7px)} .chan.r.open{transform:translateX(7px)}
+  .rec{fill:#8a93a8;stroke:#0a1220;stroke-width:1}
+  .rec.open{fill:#66e08c}
+  .rec.l.open{transform:translateX(-7px)} .rec.r.open{transform:translateX(7px)}
+  .trans{fill:#2dd4bf;opacity:.85}
+  .enz ellipse{fill:#7c4dbb;stroke:#c9a7ff;stroke-width:2;transition:stroke .4s;transform-box:fill-box;transform-origin:center}
+  .enz text{fill:#fff;font-size:9px;font-weight:600;text-anchor:middle;pointer-events:none}
+  .enz.on ellipse{stroke:#fff;animation:pulse .8s ease-in-out infinite alternate}
+  @keyframes pulse{from{transform:scale(1)}to{transform:scale(1.18)}}
+  .p{transition:transform 1.3s cubic-bezier(.45,0,.25,1),opacity .5s}
+  .p circle{transition:fill .5s}
+  .chg{font-size:15px;font-weight:700;text-anchor:middle;transition:fill .5s}
+  .lbl{fill:#9aa6bd;font-size:12px}
+  .lblm{fill:#c4cde0;font-size:15px;font-weight:600}
+  .lblm.sub{font-size:12px;font-weight:400;fill:#9aa6bd}
+  .leader{stroke:#9aa6bd;stroke-width:1;stroke-dasharray:3 3}
+  .signal{font-size:18px;font-weight:700;text-anchor:middle;fill:#ffe066;opacity:0;transition:opacity .6s}
+  .notrans *{transition:none !important}
+
+  /* Legende */
+  .legend{display:flex;flex-wrap:wrap;gap:6px 18px;padding:10px 16px;border-top:1px solid var(--line);
+          font-size:.85rem;color:var(--muted);background:var(--card2)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:11px;height:11px;border-radius:50%;display:inline-block}
+
+  /* Steuerung & Text */
+  .panel{margin-top:14px;padding:18px 20px}
+  .stepno{color:var(--accent);font-weight:700;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase}
+  .panel h2{margin:2px 0 8px;font-size:clamp(1.15rem,2.6vw,1.45rem)}
+  .panel p{margin:0 0 10px}
+  .fact{margin-top:12px;padding:10px 14px;border-left:4px solid var(--accent);background:rgba(255,179,71,.08);
+        border-radius:0 8px 8px 0;font-size:.95rem}
+  .fact b{color:var(--accent)}
+  .controls{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);
+         background:var(--card2);color:var(--text);padding:10px 18px;transition:background .2s,transform .1s}
+  button:hover:not(:disabled){background:#27345a}
+  button:active:not(:disabled){transform:scale(.97)}
+  button:disabled{opacity:.4;cursor:default}
+  button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  #next{background:var(--accent);color:#1a1200;font-weight:700;border-color:var(--accent);padding:10px 26px}
+  #next:hover{background:#ffc267!important}
+  .dots{display:flex;gap:7px;margin-left:auto}
+  .dots button{width:14px;height:14px;padding:0;border-radius:50%;background:#34405f;border:none}
+  .dots button.done{background:#6c7fae}
+  .dots button.cur{background:var(--accent);transform:scale(1.25)}
+  .hint{color:var(--muted);font-size:.85rem;margin-top:10px}
+  footer{margin-top:18px;color:var(--muted);font-size:.8rem;text-align:center}
+
+  @media (prefers-reduced-motion:reduce){
+    .p,.p circle,.vesicle,.chan,.rec,.glow,.chg,.signal{transition-duration:.01s !important;transition-delay:0s !important}
+    .enz.on ellipse{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Die cholinerge Synapse – Schritt für Schritt</h1>
+    <p>Neuromuskuläre Endplatte: Von der Erregung der Nervenzelle bis zur Wiederaufnahme von Cholin. Klicke auf „Weiter“, um den nächsten Schritt auszulösen.</p>
+  </header>
+
+  <div class="card">
+    <svg id="scene" class="notrans" viewBox="0 0 880 520" role="img"
+         aria-label="Schematische Darstellung einer cholinergen Synapse mit Präsynapse, synaptischem Spalt und Postsynapse">
+      <defs>
+        <linearGradient id="apGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffe066" stop-opacity=".55"/>
+          <stop offset="1" stop-color="#ffe066" stop-opacity=".12"/>
+        </linearGradient>
+      </defs>
+      <rect class="bg" width="880" height="520"/>
+
+      <!-- Zellen -->
+      <path class="pre"  d="M60,0 L60,150 Q60,200 110,200 L690,200 Q740,200 740,150 L740,0 Z"/>
+      <path class="post" d="M60,520 L60,340 Q60,290 110,290 L690,290 Q740,290 740,340 L740,520 Z"/>
+      <rect id="glowPre"  class="glow" x="62" y="2"   width="676" height="196"/>
+      <rect id="glowPost" class="glow" x="62" y="292" width="676" height="226"/>
+
+      <!-- Ladungen -->
+      <g id="chgPre"></g>
+      <g id="chgPost"></g>
+
+      <!-- Beschriftungen -->
+      <text class="lblm" x="752" y="60">Präsynapse</text>
+      <text class="lblm sub" x="752" y="78">(Endknöpfchen)</text>
+      <text class="lblm" x="752" y="240">Synaptischer</text>
+      <text class="lblm" x="752" y="258">Spalt</text>
+      <text class="lblm" x="752" y="410">Postsynapse</text>
+      <text class="lblm sub" x="752" y="428">(Muskelfaser)</text>
+      <text class="lbl" x="220" y="102" text-anchor="middle">Vesikel mit ACh</text>
+      <text class="lbl" x="140" y="146" text-anchor="middle">Ca²⁺-Kanal</text>
+      <text class="lbl" x="738" y="146" text-anchor="end">Cholin-Transporter</text>
+      <line class="leader" x1="170" y1="360" x2="170" y2="380"/>
+      <text class="lbl" x="170" y="396" text-anchor="middle">nACh-Rezeptor</text>
+      <text class="lbl" x="170" y="410" text-anchor="middle">(Na⁺-Kanal)</text>
+
+      <text id="apLabel"   class="signal" x="400" y="62">Aktionspotential</text>
+      <text id="epspLabel" class="signal" x="400" y="450">Depolarisation: Endplattenpotential (EPSP)</text>
+
+      <!-- Bauteile -->
+      <g id="gTrans"></g>
+      <g id="gVes"></g>
+      <g id="gCh"></g>
+      <g id="gRec"></g>
+      <g id="gEnz"></g>
+      <g id="gP"></g>
+    </svg>
+    <div class="legend" aria-label="Legende">
+      <span><i style="background:#ffb347"></i>Acetylcholin (ACh)</span>
+      <span><i style="background:#4fc3f7"></i>Ca²⁺</span>
+      <span><i style="background:#ff6b9d"></i>Na⁺</span>
+      <span><i style="background:#7c4dbb"></i>Acetylcholinesterase (AChE)</span>
+      <span><i style="background:#2dd4bf"></i>Cholin</span>
+      <span><i style="background:#9aa4b2"></i>Acetat</span>
+    </div>
+  </div>
+
+  <div class="card panel" aria-live="polite">
+    <div class="stepno" id="stepno"></div>
+    <h2 id="title"></h2>
+    <p id="text"></p>
+    <div class="fact" id="fact"></div>
+    <div class="controls">
+      <button id="prev" type="button">← Zurück</button>
+      <button id="next" type="button">Weiter →</button>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="hint">Tipp: Mit den Pfeiltasten ← → kannst du ebenfalls blättern. Die Punkte rechts springen direkt zu einem Schritt.</div>
+  </div>
+
+  <footer>Vereinfachte, nicht maßstabsgetreue Darstellung · Unterrichtsmaterial</footer>
+</div>
+
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const $=s=>document.querySelector(s);
+  function el(tag,attrs,parent){
+    const e=document.createElementNS(NS,tag);
+    for(const k in attrs) e.setAttribute(k,attrs[k]);
+    if(parent) parent.appendChild(e);
+    return e;
+  }
+
+  const ORANGE='#ffb347', TEAL='#2dd4bf', ACE='#9aa4b2', CA='#4fc3f7', NA='#ff6b9d';
+
+  const vesX=[220,380,540], vesY=150;
+  const chX=[140,300,460,620];
+  const rx=[170,260,350,440,530,620];
+  const ex=[215,395,575], ey=268;
+
+  /* ---------- Inhalte der Schritte ---------- */
+  const steps=[
+    {
+      t:'Ruhezustand',
+      p:'Die Synapse ruht. Im Endknöpfchen der Nervenzelle (Präsynapse) liegen Vesikel, gefüllt mit dem Transmitter <b>Acetylcholin (ACh)</b>. Die spannungsgesteuerten Ca²⁺-Kanäle sind geschlossen, ebenso die Na⁺-Kanäle der nikotinischen ACh-Rezeptoren in der postsynaptischen Membran. Beide Membranen zeigen das Ruhepotential: innen negativ (−), außen positiv. Im Spalt schwimmt das Enzym <b>Acetylcholinesterase (AChE)</b>.',
+      f:'<b>Beispiel:</b> Die Darstellung zeigt die neuromuskuläre Endplatte – die Synapse zwischen einem Motoneuron und einer Skelettmuskelfaser.'
+    },
+    {
+      t:'Ein Aktionspotential erreicht das Endknöpfchen',
+      p:'Das Aktionspotential läuft am Axon entlang und erreicht die Präsynapse. Die Membran des Endknöpfchens wird dadurch kurzzeitig <b>depolarisiert</b>: Die Innenseite wird positiv (+).',
+      f:'<b>Merke:</b> Das Aktionspotential selbst überspringt den synaptischen Spalt nicht – die Information wird dort chemisch weitergegeben.'
+    },
+    {
+      t:'Ca²⁺-Kanäle öffnen sich',
+      p:'Die Depolarisation öffnet <b>spannungsgesteuerte Ca²⁺-Kanäle</b>. Ca²⁺-Ionen strömen entlang ihres Konzentrationsgefälles aus dem Spalt in das Endknöpfchen ein. Das Ca²⁺-Signal ist der Auslöser für die Freisetzung des Transmitters.',
+      f:'<b>Experiment:</b> Fehlt Ca²⁺ im Außenmedium, wird auch bei ankommendem Aktionspotential kein ACh freigesetzt.'
+    },
+    {
+      t:'Exozytose: ACh wird freigesetzt',
+      p:'Ca²⁺ aktiviert Proteine (u. a. Synaptotagmin und den SNARE-Komplex), die die Vesikel mit der präsynaptischen Membran verschmelzen lassen. ACh gelangt durch <b>Exozytose</b> in den synaptischen Spalt und diffundiert zur Postsynapse. Der Spalt ist nur etwa 20–50 nm breit, die Diffusion dauert daher nur Bruchteile einer Millisekunde.',
+      f:'<b>Gift:</b> Botulinumtoxin spaltet SNARE-Proteine. Die Exozytose wird blockiert, es folgt eine schlaffe Lähmung (in sehr kleiner Dosis als „Botox“ medizinisch genutzt).'
+    },
+    {
+      t:'ACh bindet an die Rezeptoren',
+      p:'ACh-Moleküle binden an die <b>nikotinischen ACh-Rezeptoren</b> der postsynaptischen Membran (Schlüssel-Schloss-Prinzip). Diese Rezeptoren sind <b>ligandengesteuerte Ionenkanäle</b>: Der Kanal öffnet sich erst, wenn der Transmitter gebunden ist.',
+      f:'<b>Gift:</b> Curare (Pfeilgift) besetzt die Rezeptoren, ohne den Kanal zu öffnen (kompetitive Hemmung). Die Muskelfaser wird nicht mehr erregt, es kommt zur Lähmung.'
+    },
+    {
+      t:'Na⁺-Kanäle öffnen – Depolarisation',
+      p:'Durch die Bindung ändert der Rezeptor seine Raumstruktur, der Kanal öffnet sich. Na⁺ strömt ein (K⁺ strömt aus, netto überwiegt der Na⁺-Einstrom). Die postsynaptische Membran wird depolarisiert: Es entsteht das <b>Endplattenpotential (EPSP)</b>. Überschreitet es den Schwellenwert, löst es in der Muskelfaser ein Aktionspotential aus und die Faser kontrahiert.',
+      f:'<b>Merke:</b> An der neuromuskulären Endplatte ist das EPSP so groß, dass praktisch jedes Aktionspotential des Motoneurons ein Aktionspotential in der Muskelfaser auslöst.'
+    },
+    {
+      t:'Abbau durch Acetylcholinesterase',
+      p:'ACh löst sich vom Rezeptor, die Na⁺-Kanäle schließen sich. Die <b>Acetylcholinesterase (AChE)</b> spaltet ACh im Spalt in <b>Acetat</b> und <b>Cholin</b>. Damit endet das Signal – sonst würde die Muskelfaser dauerhaft erregt bleiben.',
+      f:'<b>Gift:</b> Nervenkampfstoffe wie Sarin und Insektizide wie E 605 hemmen die AChE. ACh bleibt wirksam, die Folge sind Dauererregung, Krämpfe und Atemlähmung.'
+    },
+    {
+      t:'Wiederaufnahme und Recycling',
+      p:'Cholin wird über einen Transporter in die Präsynapse aufgenommen. Dort entsteht mit Acetyl-CoA durch die Cholin-Acetyltransferase wieder ACh, das in Vesikel verpackt wird. Ca²⁺ wird aus dem Endknöpfchen gepumpt, die Na⁺/K⁺-Pumpe stellt die Ionengradienten wieder her. Die Synapse ist bereit für das nächste Signal. Acetat diffundiert ab und wird im Stoffwechsel weiterverwendet.',
+      f:'<b>Krankheit:</b> Bei Myasthenia gravis greifen Autoantikörper die ACh-Rezeptoren an. Weniger funktionierende Rezeptoren führen zu schnell ermüdender Muskelschwäche.'
+    }
+  ];
+  const LAST=steps.length-1;
+
+  /* ---------- Szene aufbauen ---------- */
+  const scene=$('#scene');
+
+  // Ladungen
+  const chgPre=[],chgPost=[];
+  for(let i=0;i<17;i++){
+    const x=80+40*i;
+    chgPre.push(el('text',{class:'chg',x:x,y:193},$('#chgPre')));
+    chgPost.push(el('text',{class:'chg',x:x,y:333},$('#chgPost')));
+  }
+
+  // Transporter
+  el('rect',{class:'trans',x:690,y:190,width:8,height:20,rx:2},$('#gTrans'));
+  el('rect',{class:'trans',x:702,y:190,width:8,height:20,rx:2},$('#gTrans'));
+
+  // Vesikel
+  const vesicles=vesX.map(x=>{
+    const g=el('g',{class:'vesicle'},$('#gVes'));
+    el('circle',{cx:x,cy:vesY,r:30},g);
+    return g;
+  });
+
+  // Ca-Kanäle
+  const chans=chX.map(x=>({
+    l:el('rect',{class:'chan l',x:x-16,y:190,width:16,height:20,rx:2},$('#gCh')),
+    r:el('rect',{class:'chan r',x:x,y:190,width:16,height:20,rx:2},$('#gCh'))
+  }));
+
+  // Rezeptoren
+  const recs=rx.map(x=>({
+    l:el('rect',{class:'rec l',x:x-16,y:282,width:16,height:32,rx:3},$('#gRec')),
+    r:el('rect',{class:'rec r',x:x,y:282,width:16,height:32,rx:3},$('#gRec'))
+  }));
+
+  // Enzyme
+  const enzymes=ex.map(x=>{
+    const g=el('g',{class:'enz'},$('#gEnz'));
+    el('ellipse',{cx:x,cy:ey,rx:19,ry:12},g);
+    const t=el('text',{x:x,y:ey+3},g); t.textContent='AChE';
+    return g;
+  });
+
+  // Teilchen
+  const gP=$('#gP');
+  function mk(r,color){
+    const g=el('g',{class:'p'},gP);
+    const c=el('circle',{r:r},g);
+    c.style.fill=color;
+    return {g:g,c:c};
+  }
+  const ach=[],ace=[],ca=[],na=[];
+  for(let i=0;i<18;i++) ach.push(mk(5.5,ORANGE));
+  for(let i=0;i<18;i++) ace.push(mk(4,ACE));
+  for(let i=0;i<8;i++)  ca.push(mk(5,CA));
+  for(let i=0;i<12;i++) na.push(mk(4.5,NA));
+
+  function put(p,x,y,o,delay,fill,fillDelay){
+    delay=delay||0;
+    p.g.style.transitionDelay=delay+'s,'+delay+'s';
+    p.g.style.transform='translate('+x+'px,'+y+'px)';
+    p.g.style.opacity=(o===undefined?1:o);
+    if(fill){
+      p.c.style.transitionDelay=(fillDelay||0)+'s';
+      p.c.style.fill=fill;
+    }
+  }
+
+  /* ---------- Positionen ---------- */
+  const vesPos=i=>{const v=Math.floor(i/6),k=i%6;return [vesX[v]+Math.cos(k*Math.PI/3)*15, vesY+Math.sin(k*Math.PI/3)*15];};
+  const cleftPos=i=>{const v=Math.floor(i/6),k=i%6;return [vesX[v]+(k-2.5)*22, 222+(k%3)*10];};
+  const isBound=i=>i%3===0;
+  const boundPos=i=>[rx[i/3],276];
+  const hoverPos=i=>{const j=i-Math.floor(i/3)-1;return [120+j*50, 238+(j%3)*8];};
+  const enzPos=i=>[ex[i%3]+(Math.floor(i/3)-2.5)*5, 262+((i*7)%5)*3];
+  const acePos=i=>[ex[i%3]+(Math.floor(i/3)-2.5)*5, 282];
+
+  /* ---------- Zustand rendern ---------- */
+  let step=0, timers=[];
+  function later(fn,ms){timers.push(setTimeout(fn,ms));}
+
+  function render(s){
+    timers.forEach(clearTimeout); timers=[];
+    const apOn=(s===1||s===2);
+    const epspOn=(s===5);
+
+    // Überlagerungen
+    $('#glowPre').style.transform=apOn?'scaleY(1)':'scaleY(0)';
+    $('#glowPre').style.opacity=apOn?1:0;
+    $('#glowPost').style.transform=epspOn?'scaleY(1)':'scaleY(0)';
+    $('#glowPost').style.opacity=epspOn?1:0;
+    $('#apLabel').style.opacity=apOn?1:0;
+    $('#epspLabel').style.opacity=epspOn?1:0;
+
+    // Ladungen
+    chgPre.forEach(t=>{t.textContent=apOn?'+':'−'; t.style.fill=apOn?'#ffe066':'#6f86a8';});
+    chgPost.forEach(t=>{t.textContent=epspOn?'+':'−'; t.style.fill=epspOn?'#ffe066':'#6f86a8';});
+
+    // Kanäle / Rezeptoren / Enzyme
+    const caOpen=(s===2||s===3);
+    chans.forEach(c=>{c.l.classList.toggle('open',caOpen);c.r.classList.toggle('open',caOpen);});
+    recs.forEach(c=>{c.l.classList.toggle('open',s===5);c.r.classList.toggle('open',s===5);});
+    enzymes.forEach(g=>g.classList.toggle('on',s===6));
+
+    // Vesikel
+    vesicles.forEach(v=>{
+      let dy=0,o=1,d='0s,0s';
+      if(s===3){dy=50;o=0;d='0s,.6s';}
+      else if(s>=4&&s<=6){dy=50;o=0;}
+      else if(s===7){dy=0;o=1;d='0s,3.6s';}
+      v.style.transitionDelay=d;
+      v.style.transform='translateY('+dy+'px)';
+      v.style.opacity=o;
+    });
+
+    // ACh / Cholin
+    ach.forEach((p,i)=>{
+      if(s<=2){ const q=vesPos(i); put(p,q[0],q[1],1,0,ORANGE,0); }
+      else if(s===3){ const q=cleftPos(i); put(p,q[0],q[1],1,.6,ORANGE,0); }
+      else if(s===4||s===5){ const q=isBound(i)?boundPos(i):hoverPos(i); put(p,q[0],q[1],1,0,ORANGE,0); }
+      else if(s===6){ const q=enzPos(i); put(p,q[0],q[1],1,0,TEAL,1.3); }
+      else { // s===7: Cholin -> Transporter -> Vesikel
+        put(p,688+(i%6)*5,226+Math.floor(i/6)*6,1,0,TEAL,0);
+        later(()=>put(p,696+(i%6)*2,170+Math.floor(i/6)*4,1,0),1500);
+        later(()=>{const q=vesPos(i);put(p,q[0],q[1],1,0,ORANGE,0);},2900);
+      }
+    });
+
+    // Acetat
+    ace.forEach((p,i)=>{
+      const b=acePos(i);
+      if(s===6) put(p,b[0],b[1],1,1.3,ACE,0);
+      else if(s===7) put(p,b[0]+30,b[1]-10,0,0,ACE,0);
+      else put(p,b[0],b[1],0,0,ACE,0);
+    });
+
+    // Ca²⁺
+    ca.forEach((p,m)=>{
+      const c=Math.floor(m/2), side=(m%2)?1:-1;
+      const rest=[chX[c]+side*12,240];
+      const gate=[chX[c]+side*3.5,200];
+      const inn=[chX[c]+side*10,172+(m%2)*6];
+      if(s===2){
+        put(p,gate[0],gate[1],1,.5);
+        later(()=>put(p,inn[0],inn[1],1,0),1900);
+      }
+      else if(s>=3&&s<=6) put(p,inn[0],inn[1],1,0);
+      else if(s===7) put(p,rest[0],rest[1],1,.5);
+      else put(p,rest[0],rest[1],1,0);
+    });
+
+    // Na⁺
+    na.forEach((p,m)=>{
+      const r=Math.floor(m/2), side=(m%2)?1:-1;
+      const rest=[rx[r]+side*22,262];
+      const gate=[rx[r]+side*3.5,296];
+      const inn=[rx[r]+side*10,340+(m%2)*10];
+      if(s===5){
+        put(p,gate[0],gate[1],1,.6);
+        later(()=>put(p,inn[0],inn[1],1,0),2000);
+      }
+      else if(s===6) put(p,inn[0],inn[1],.35,0);
+      else put(p,rest[0],rest[1],1,0);
+    });
+  }
+
+  /* ---------- Steuerung ---------- */
+  const dotsBox=$('#dots');
+  const dots=steps.map((_,i)=>{
+    const b=document.createElement('button');
+    b.type='button';
+    b.setAttribute('aria-label','Schritt '+(i+1));
+    b.addEventListener('click',()=>go(i));
+    dotsBox.appendChild(b);
+    return b;
+  });
+
+  function go(n){
+    step=Math.max(0,Math.min(LAST,n));
+    const d=steps[step];
+    $('#stepno').textContent='Schritt '+(step+1)+' von '+steps.length;
+    $('#title').textContent=d.t;
+    $('#text').innerHTML=d.p;
+    $('#fact').innerHTML=d.f;
+    $('#prev').disabled=(step===0);
+    $('#next').textContent=(step===LAST)?'↻ Neustart':'Weiter →';
+    dots.forEach((b,i)=>{b.className=(i===step)?'cur':(i<step?'done':'');});
+    render(step);
+  }
+
+  $('#next').addEventListener('click',()=>go(step===LAST?0:step+1));
+  $('#prev').addEventListener('click',()=>go(step-1));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight') go(step===LAST?0:step+1);
+    else if(e.key==='ArrowLeft') go(step-1);
+  });
+
+  // Start ohne Übergänge
+  go(0);
+  scene.getBoundingClientRect();
+  requestAnimationFrame(()=>scene.classList.remove('notrans'));
+})();
+</script>
+</body>
+</html>
